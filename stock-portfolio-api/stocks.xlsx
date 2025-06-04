@@ -1,0 +1,6 @@
+market,symbol,company,currency,shares,avgCost,currentPrice
+US,AAPL,Apple Inc.,USD,100,170.50,175.20
+US,MSFT,Microsoft Corp.,USD,50,400.00,405.50
+HK,0005.HK,HSBC Holdings plc,HKD,500,62.80,63.50
+HK,0700.HK,Tencent Holdings Ltd.,HKD,200,300.00,298.00
+US,GOOG,Alphabet Inc.,USD,20,150.00,152.00

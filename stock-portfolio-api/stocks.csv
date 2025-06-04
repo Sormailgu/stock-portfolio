@@ -1,0 +1,6 @@
+market,symbol,currency,shares,avgCost
+US,AAPL,USD,100,170.5
+US,MSFT,USD,50,400.0
+HK,0005.HK,HKD,500,62.8
+HK,0700.HK,HKD,200,300.0
+US,GOOG,USD,20,150.0

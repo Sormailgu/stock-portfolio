@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Stock Portfolio Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals (Tailwind Slate, Stone, and Teal) -->
+    <!-- Application Structure Plan: A responsive dashboard layout is used to provide a top-down view of the portfolio. It starts with high-level KPI cards (Total Value, P/L), followed by visual breakdowns (Doughnut chart for composition, Bar chart for market comparison), and ends with a detailed, filterable, and sortable table of holdings. This structure guides the user from a general overview to specific details intuitively, making it easier to consume than a simple table. The primary interaction is filtering by market (US/HK), which updates all elements cohesively. -->
+    <!-- Visualization & Content Choices: 
+    - Report Info: Portfolio-wide stats (Total Value, Total P/L). Goal: Inform. Method: KPI Cards (HTML/CSS). Interaction: Update on filter. Justification: Quick, high-level overview.
+    - Report Info: Value of each stock relative to the portfolio. Goal: Compare Proportions. Method: Doughnut Chart (Chart.js/Canvas). Interaction: Tooltips, updates on filter. Justification: Best for showing part-to-whole relationships.
+    - Report Info: Performance comparison between US and HK markets. Goal: Compare. Method: Grouped Bar Chart (Chart.js/Canvas). Interaction: Tooltips, updates on filter. Justification: Directly compares cost vs. value for distinct categories.
+    - Report Info: Detailed stock data (cost, price, P/L, etc.). Goal: Organize/Inform. Method: Sortable HTML Table. Interaction: Filter by market, sort by any column. Justification: Provides granular detail and allows user-driven analysis.
+    - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .sortable-header {
+            cursor: pointer;
+            user-select: none;
+        }
+        .sortable-header:hover {
+            color: #14b8a6; /* teal-500 */
+        }
+        .sort-asc::after {
+            content: ' ▲';
+            font-size: 0.8em;
+        }
+        .sort-desc::after {
+            content: ' ▼';
+            font-size: 0.8em;
+        }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="mb-8">
+            <h1 class="text-4xl font-bold text-slate-900">Stock Portfolio Dashboard</h1>
+            <p class="text-slate-500 mt-2">An interactive overview of your US and HK stock holdings.</p>
+        </header>
+
+        <section id="filters" class="mb-8 flex flex-wrap gap-2">
+             <p class="w-full text-lg font-semibold text-slate-700 mb-2">This section allows you to filter your entire dashboard view. Select a market to focus on just those assets, or view all of them together. All charts and tables below will update based on your selection.</p>
+            <button data-filter="All" class="filter-btn bg-teal-500 text-white py-2 px-4 rounded-lg shadow-md hover:bg-teal-600 transition-all">All Markets</button>
+            <button data-filter="US" class="filter-btn bg-white text-slate-700 py-2 px-4 rounded-lg shadow-md hover:bg-slate-100 transition-all">US Market</button>
+            <button data-filter="HK" class="filter-btn bg-white text-slate-700 py-2 px-4 rounded-lg shadow-md hover:bg-slate-100 transition-all">HK Market</button>
+        </section>
+
+        <section id="kpi-cards" class="mb-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+             <div class="md:col-span-3">
+                 <p class="text-lg font-semibold text-slate-700 mb-2">Here is a high-level summary of your portfolio's financial health based on your current filter. It shows the total current value of your holdings, your initial investment, and your overall profit or loss.</p>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-lg border border-slate-200">
+                <h3 class="text-slate-500 font-medium">Total Market Value</h3>
+                <p id="total-market-value" class="text-3xl font-bold text-slate-900 mt-2">$0.00</p>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-lg border border-slate-200">
+                <h3 class="text-slate-500 font-medium">Total Cost</h3>
+                <p id="total-cost" class="text-3xl font-bold text-slate-900 mt-2">$0.00</p>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-lg border border-slate-200">
+                <h3 class="text-slate-500 font-medium">Unrealized P/L</h3>
+                <p id="total-pl" class="text-3xl font-bold text-slate-900 mt-2">$0.00</p>
+            </div>
+        </section>
+
+        <section id="visualizations" class="mb-8 grid grid-cols-1 lg:grid-cols-5 gap-6">
+            <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg border border-slate-200">
+                <h3 class="text-xl font-bold text-slate-900 mb-1">Portfolio Composition</h3>
+                <p class="text-slate-500 mb-4">This chart shows the breakdown of your portfolio by the market value of each stock. Hover over a slice to see its value.</p>
+                <div class="chart-container">
+                    <canvas id="compositionChart"></canvas>
+                </div>
+            </div>
+            <div class="lg:col-span-3 bg-white p-6 rounded-xl shadow-lg border border-slate-200">
+                <h3 class="text-xl font-bold text-slate-900 mb-1">Market Performance (Cost vs. Value)</h3>
+                <p class="text-slate-500 mb-4">This chart compares the total cost of your investments against their current market value, grouped by market.</p>
+                <div class="chart-container">
+                    <canvas id="performanceChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section id="holdings-table" class="bg-white p-6 rounded-xl shadow-lg border border-slate-200">
+             <h3 class="text-xl font-bold text-slate-900 mb-1">Detailed Holdings</h3>
+             <p class="text-slate-500 mb-4">This table provides a detailed look at each of your holdings. Click on any column header with an arrow icon to sort the table by that value. The data shown reflects the market filter selected above.</p>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="border-b-2 border-slate-200">
+                            <th class="p-3 sortable-header" data-sort="symbol">Symbol</th>
+                            <th class="p-3">Company</th>
+                            <th class="p-3 text-right sortable-header" data-sort="shares">Shares</th>
+                            <th class="p-3 text-right sortable-header" data-sort="avgCost">Avg. Cost</th>
+                            <th class="p-3 text-right sortable-header" data-sort="marketValue">Market Value</th>
+                            <th class="p-3 text-right sortable-header" data-sort="pl">Unrealized P/L</th>
+                            <th class="p-3 text-right sortable-header" data-sort="plPercent">Unrealized P/L %</th>
+                        </tr>
+                    </thead>
+                    <tbody id="portfolio-body">
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        const portfolioData = [
+            { market: 'US', symbol: 'AAPL', company: 'Apple Inc.', currency: 'USD', shares: 100, avgCost: 170.50, currentPrice: 175.20 },
+            { market: 'US', symbol: 'MSFT', company: 'Microsoft Corp.', currency: 'USD', shares: 50, avgCost: 400.00, currentPrice: 405.50 },
+            { market: 'HK', symbol: '0005.HK', company: 'HSBC Holdings plc', currency: 'HKD', shares: 500, avgCost: 62.80, currentPrice: 63.50 },
+            { market: 'HK', symbol: '0700.HK', company: 'Tencent Holdings Ltd.', currency: 'HKD', shares: 200, avgCost: 300.00, currentPrice: 298.00 },
+            { market: 'US', symbol: 'GOOG', company: 'Alphabet Inc.', currency: 'USD', shares: 20, avgCost: 150.00, currentPrice: 152.00 }
+        ];
+
+        let currentFilter = 'All';
+        let currentSort = { key: 'marketValue', order: 'desc' };
+        let compositionChart, performanceChart;
+        
+        const usdToHkdRate = 7.8; 
+
+        function processData(data) {
+            return data.map(stock => {
+                const totalCost = stock.shares * stock.avgCost;
+                const marketValue = stock.shares * stock.currentPrice;
+                const pl = marketValue - totalCost;
+                const plPercent = totalCost === 0 ? 0 : (pl / totalCost) * 100;
+
+                const marketValueUSD = stock.currency === 'HKD' ? marketValue / usdToHkdRate : marketValue;
+                const totalCostUSD = stock.currency === 'HKD' ? totalCost / usdToHkdRate : totalCost;
+
+                return { ...stock, totalCost, marketValue, pl, plPercent, marketValueUSD, totalCostUSD };
+            });
+        }
+
+        const fullData = processData(portfolioData);
+
+        function formatCurrency(value, currency = 'USD') {
+            const options = { style: 'currency', currency, minimumFractionDigits: 2 };
+            return new Intl.NumberFormat('en-US', options).format(value);
+        }
+
+        function updateKpiCards(data) {
+            const totalMarketValue = data.reduce((sum, stock) => sum + stock.marketValueUSD, 0);
+            const totalCost = data.reduce((sum, stock) => sum + stock.totalCostUSD, 0);
+            const totalPl = totalMarketValue - totalCost;
+
+            document.getElementById('total-market-value').textContent = formatCurrency(totalMarketValue);
+            document.getElementById('total-cost').textContent = formatCurrency(totalCost);
+            const plElement = document.getElementById('total-pl');
+            plElement.textContent = formatCurrency(totalPl);
+            plElement.style.color = totalPl >= 0 ? '#10b981' : '#ef4444'; // green-500 or red-500
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('portfolio-body');
+            tbody.innerHTML = '';
+            
+            data.sort((a, b) => {
+                let valA = a[currentSort.key];
+                let valB = b[currentSort.key];
+                if (typeof valA === 'string') {
+                    valA = valA.toLowerCase();
+                    valB = valB.toLowerCase();
+                }
+                if (currentSort.order === 'asc') {
+                    return valA > valB ? 1 : -1;
+                } else {
+                    return valA < valB ? 1 : -1;
+                }
+            });
+
+            data.forEach(stock => {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-slate-100 hover:bg-slate-50';
+
+                const plColor = stock.pl >= 0 ? 'text-green-600' : 'text-red-600';
+
+                row.innerHTML = `
+                    <td class="p-3 font-medium">${stock.symbol} <span class="text-xs text-slate-400">${stock.market}</span></td>
+                    <td class="p-3 text-slate-600">${stock.company}</td>
+                    <td class="p-3 text-right">${stock.shares.toLocaleString()}</td>
+                    <td class="p-3 text-right">${formatCurrency(stock.avgCost, stock.currency)}</td>
+                    <td class="p-3 text-right font-semibold">${formatCurrency(stock.marketValue, stock.currency)}</td>
+                    <td class="p-3 text-right ${plColor}">${formatCurrency(stock.pl, stock.currency)}</td>
+                    <td class="p-3 text-right ${plColor}">${stock.plPercent.toFixed(2)}%</td>
+                `;
+                tbody.appendChild(row);
+            });
+            updateSortHeaders();
+        }
+
+        function updateSortHeaders() {
+            document.querySelectorAll('.sortable-header').forEach(header => {
+                header.classList.remove('sort-asc', 'sort-desc');
+                if (header.dataset.sort === currentSort.key) {
+                    header.classList.add(currentSort.order === 'asc' ? 'sort-asc' : 'sort-desc');
+                }
+            });
+        }
+        
+        function updateCompositionChart(data) {
+            const ctx = document.getElementById('compositionChart').getContext('2d');
+            const chartData = {
+                labels: data.map(s => s.symbol),
+                datasets: [{
+                    data: data.map(s => s.marketValueUSD),
+                    backgroundColor: ['#14b8a6', '#0891b2', '#f97316', '#84cc16', '#6366f1', '#f43f5e'],
+                    borderColor: '#f8fafc',
+                    borderWidth: 4,
+                }]
+            };
+
+            if (compositionChart) {
+                compositionChart.data = chartData;
+                compositionChart.update();
+            } else {
+                compositionChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: chartData,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    boxWidth: 12,
+                                    padding: 20,
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed !== null) {
+                                            label += formatCurrency(context.parsed);
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        },
+                        cutout: '70%'
+                    }
+                });
+            }
+        }
+
+        function updatePerformanceChart(data) {
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+            const marketData = data.reduce((acc, stock) => {
+                if (!acc[stock.market]) {
+                    acc[stock.market] = { totalCostUSD: 0, marketValueUSD: 0 };
+                }
+                acc[stock.market].totalCostUSD += stock.totalCostUSD;
+                acc[stock.market].marketValueUSD += stock.marketValueUSD;
+                return acc;
+            }, {});
+
+            const labels = Object.keys(marketData);
+            const costData = labels.map(label => marketData[label].totalCostUSD);
+            const valueData = labels.map(label => marketData[label].marketValueUSD);
+
+            const chartData = {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Total Cost',
+                        data: costData,
+                        backgroundColor: '#64748b', // slate-500
+                        borderRadius: 6,
+                    },
+                    {
+                        label: 'Market Value',
+                        data: valueData,
+                        backgroundColor: '#14b8a6', // teal-500
+                        borderRadius: 6,
+                    }
+                ]
+            };
+
+            if (performanceChart) {
+                performanceChart.data = chartData;
+                performanceChart.update();
+            } else {
+                performanceChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: chartData,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return formatCurrency(value);
+                                    }
+                                }
+                            },
+                             x: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        },
+                        plugins: {
+                           legend: {
+                                position: 'bottom',
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.y !== null) {
+                                            label += formatCurrency(context.parsed.y);
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        
+        function updateDashboard() {
+            const filteredData = currentFilter === 'All'
+                ? fullData
+                : fullData.filter(stock => stock.market === currentFilter);
+
+            updateKpiCards(filteredData);
+            renderTable(filteredData);
+            updateCompositionChart(filteredData);
+            updatePerformanceChart(filteredData);
+        }
+
+        document.querySelectorAll('.filter-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                currentFilter = button.dataset.filter;
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.classList.remove('bg-teal-500', 'text-white');
+                    btn.classList.add('bg-white', 'text-slate-700');
+                });
+                button.classList.add('bg-teal-500', 'text-white');
+                button.classList.remove('bg-white', 'text-slate-700');
+                updateDashboard();
+            });
+        });
+
+        document.querySelectorAll('.sortable-header').forEach(header => {
+            header.addEventListener('click', () => {
+                const sortKey = header.dataset.sort;
+                if (currentSort.key === sortKey) {
+                    currentSort.order = currentSort.order === 'asc' ? 'desc' : 'asc';
+                } else {
+                    currentSort.key = sortKey;
+                    currentSort.order = 'desc';
+                }
+                updateDashboard();
+            });
+        });
+
+        window.onload = function() {
+            updateDashboard();
+        };
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "name": "stock-portfolio",
+  "version": "1.0.0",
+  "description": "An interactive stock portfolio dashboard that displays stock data and visualizations.",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "xlsx": "^0.17.0"
+  },
+  "author": "",
+  "license": "ISC"
+}
