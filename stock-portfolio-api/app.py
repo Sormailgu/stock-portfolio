@@ -2,19 +2,12 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 import pandas as pd
 import os
-import requests
-from requests.exceptions import RequestException
-from werkzeug.serving import make_server
-import time
+import yfinance as yf
 
 app = Flask(__name__)
 CORS(app)
 
-# Alpha Vantage API key (replace with your own key)
-ALPHA_VANTAGE_API_KEY = "DJA0HOM47XGJWBCO"  # Replace with your Alpha Vantage API key
-ALPHA_VANTAGE_BASE_URL = "https://www.alphavantage.co/query"
-
-# Cache to store API results and avoid redundant calls
+# Cache to store yfinance results and avoid redundant calls
 cache = {}
 
 @app.route('/api/stocks', methods=['GET'])
@@ -39,39 +32,25 @@ def get_stocks():
                 company, price = cache[symbol]
             else:
                 try:
-                    # Fetch company name using OVERVIEW endpoint
-                    overview_url = f"{ALPHA_VANTAGE_BASE_URL}?function=OVERVIEW&symbol={symbol}&apikey={ALPHA_VANTAGE_API_KEY}"
-                    overview_response = requests.get(overview_url, timeout=10)
+                    # Fetch stock data using yfinance
+                    stock = yf.Ticker(symbol)
+                    info = stock.info
                     
-                    if overview_response.status_code != 200:
-                        return jsonify({'error': f'Failed to fetch data for {symbol} from Alpha Vantage'}), 500
-                    
-                    overview_data = overview_response.json()
-                    if not overview_data or 'Name' not in overview_data:
+                    # Get company name
+                    company = info.get('longName', None)
+                    if not company:
                         return jsonify({'error': f'No company data found for {symbol}'}), 404
                     
-                    company = overview_data['Name']
-                    
-                    # Fetch current price using GLOBAL_QUOTE endpoint
-                    quote_url = f"{ALPHA_VANTAGE_BASE_URL}?function=GLOBAL_QUOTE&symbol={symbol}&apikey={ALPHA_VANTAGE_API_KEY}"
-                    quote_response = requests.get(quote_url, timeout=10)
-                    
-                    if quote_response.status_code != 200:
-                        return jsonify({'error': f'Failed to fetch price for {symbol} from Alpha Vantage'}), 500
-                    
-                    quote_data = quote_response.json()
-                    if not quote_data or 'Global Quote' not in quote_data or '05. price' not in quote_data['Global Quote']:
+                    # Get current price from the latest available data
+                    price_data = stock.history(period='1d')
+                    if price_data.empty or 'Close' not in price_data.columns:
                         return jsonify({'error': f'No price data found for {symbol}'}), 404
-                    
-                    price = float(quote_data['Global Quote']['05. price'])
+                    price = round(float(price_data['Close'].iloc[-1]), 2)
                     
                     # Cache the results
                     cache[symbol] = (company, price)
-                    
-                    # Respect Alpha Vantage rate limits (5 calls per minute)
-                    time.sleep(12)  # Wait 12 seconds between calls (5 calls/min = 1 call every 12s)
                 
-                except RequestException as e:
+                except Exception as e:
                     return jsonify({'error': f'Failed to fetch data for {symbol}: {str(e)}'}), 500
             
             companies.append(company)
@@ -92,7 +71,4 @@ def get_stocks():
         return jsonify({'error': f'Failed to process request: {str(e)}'}), 500
 
 if __name__ == '__main__':
-    # Create a server with a custom timeout
-    server = make_server('0.0.0.0', 5000, app)
-    server.timeout = 180  # Set timeout to 3 minutes (180 seconds)
-    server.serve_forever()
+    app.run(host='0.0.0.0', port=5000)
