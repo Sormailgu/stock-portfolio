@@ -71,4 +71,4 @@ def get_stocks():
         return jsonify({'error': f'Failed to process request: {str(e)}'}), 500
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5001)
