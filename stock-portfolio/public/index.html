@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,44 +13,35 @@
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f8fafc;
-            /* slate-50 */
         }
-
         .chart-container {
             position: relative;
             width: 100%;
             height: 350px;
             max-height: 400px;
         }
-
         @media (min-width: 768px) {
             .chart-container {
                 height: 400px;
             }
         }
-
         .sortable-header {
             cursor: pointer;
             user-select: none;
         }
-
         .sortable-header:hover {
             color: #14b8a6;
-            /* teal-500 */
         }
-
         .sort-asc::after {
             content: ' ▲';
             font-size: 0.8em;
         }
-
         .sort-desc::after {
             content: ' ▼';
             font-size: 0.8em;
         }
     </style>
 </head>
-
 <body class="text-slate-800">
     <div class="container mx-auto p-4 md:p-8">
         <header class="mb-8">
@@ -60,25 +50,20 @@
         </header>
 
         <section id="filters" class="mb-8 flex flex-wrap gap-2">
-            <p class="w-full text-lg font-semibold text-slate-700 mb-2">This section allows you to filter your entire
-                dashboard view. Select a market to focus on just those assets, or view all of them together. All charts
-                and tables below will update based on your selection.</p>
-            <button data-filter="All"
-                class="filter-btn bg-teal-500 text-white py-2 px-4 rounded-lg shadow-md hover:bg-teal-600 transition-all">All
-                Markets</button>
-            <button data-filter="US"
-                class="filter-btn bg-white text-slate-700 py-2 px-4 rounded-lg shadow-md hover:bg-slate-100 transition-all">US
-                Market</button>
-            <button data-filter="HK"
-                class="filter-btn bg-white text-slate-700 py-2 px-4 rounded-lg shadow-md hover:bg-slate-100 transition-all">HK
-                Market</button>
+            <p class="w-full text-lg font-semibold text-slate-700 mb-2">Filter your dashboard view by market or sector. All charts and tables will update based on your selection.</p>
+            <div class="flex gap-2">
+                <button data-filter="All" class="filter-btn bg-teal-500 text-white py-2 px-4 rounded-lg shadow-md hover:bg-teal-600 transition-all">All Markets</button>
+                <button data-filter="US" class="filter-btn bg-white text-slate-700 py-2 px-4 rounded-lg shadow-md hover:bg-slate-100 transition-all">US Market</button>
+                <button data-filter="HK" class="filter-btn bg-white text-slate-700 py-2 px-4 rounded-lg shadow-md hover:bg-slate-100 transition-all">HK Market</button>
+            </div>
+            <select id="sector-filter" class="bg-white text-slate-700 py-2 px-4 rounded-lg shadow-md hover:bg-slate-100 transition-all">
+                <option value="">All Sectors</option>
+            </select>
         </section>
 
         <section id="kpi-cards" class="mb-8 grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="md:col-span-3">
-                <p class="text-lg font-semibold text-slate-700 mb-2">Here is a high-level summary of your portfolio's
-                    financial health based on your current filter. It shows the total current value of your holdings,
-                    your initial investment, and your overall profit or loss.</p>
+                <p class="text-lg font-semibold text-slate-700 mb-2">Summary of your portfolio's financial health based on your current filter.</p>
             </div>
             <div class="bg-white p-6 rounded-xl shadow-lg border border-slate-200">
                 <h3 class="text-slate-500 font-medium">Total Market Value</h3>
@@ -97,24 +82,21 @@
         <section id="visualizations" class="mb-8 grid grid-cols-1 lg:grid-cols-5 gap-6">
             <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg border border-slate-200">
                 <h3 class="text-xl font-bold text-slate-900 mb-1">Portfolio Composition</h3>
-                <p class="text-slate-500 mb-4">This chart shows the breakdown of your portfolio by the market value of
-                    each stock. Hover over a slice to see its value.</p>
+                <p class="text-slate-500 mb-4">Breakdown of your portfolio by market value of each stock.</p>
                 <div class="chart-container">
                     <canvas id="compositionChart"></canvas>
                 </div>
             </div>
             <div class="lg:col-span-3 bg-white p-6 rounded-xl shadow-lg border border-slate-200">
                 <h3 class="text-xl font-bold text-slate-900 mb-1">Market Performance (Cost vs. Value)</h3>
-                <p class="text-slate-500 mb-4">This chart compares the total cost of your investments against their
-                    current market value, grouped by market.</p>
+                <p class="text-slate-500 mb-4">Comparison of total cost vs. current market value, grouped by market.</p>
                 <div class="chart-container">
                     <canvas id="performanceChart"></canvas>
                 </div>
             </div>
             <div class="lg:col-span-5 bg-white p-6 rounded-xl shadow-lg border border-slate-200 mt-6">
                 <h3 class="text-xl font-bold text-slate-900 mb-1">Portfolio by Sector</h3>
-                <p class="text-slate-500 mb-4">This chart shows your portfolio's market value distribution by sector.
-                </p>
+                <p class="text-slate-500 mb-4">Market value distribution by sector.</p>
                 <div class="chart-container" style="height:320px;">
                     <canvas id="sectorChart"></canvas>
                 </div>
@@ -123,9 +105,7 @@
 
         <section id="holdings-table" class="bg-white p-6 rounded-xl shadow-lg border border-slate-200">
             <h3 class="text-xl font-bold text-slate-900 mb-1">Detailed Holdings</h3>
-            <p class="text-slate-500 mb-4">This table provides a detailed look at each of your holdings. Click on any
-                column header with an arrow icon to sort the table by that value. The data shown reflects the market
-                filter selected above.</p>
+            <p class="text-slate-500 mb-4">Detailed view of your holdings. Click column headers to sort.</p>
             <div class="overflow-x-auto">
                 <table class="w-full text-left">
                     <thead>
@@ -140,8 +120,7 @@
                             <th class="p-3 text-right sortable-header" data-sort="plPercent">Unrealized P/L %</th>
                         </tr>
                     </thead>
-                    <tbody id="portfolio-body">
-                    </tbody>
+                    <tbody id="portfolio-body"></tbody>
                 </table>
             </div>
         </section>
@@ -149,21 +128,31 @@
 
     <script>
         let currentFilter = 'All';
+        let currentSector = '';
         let currentSort = { key: 'marketValue', order: 'desc' };
         let compositionChart, performanceChart, sectorChart;
         const usdToHkdRate = 7.8;
 
         async function fetchStockData() {
             try {
-                const response = await fetch('http://localhost:5001/api/stocks');
+                const params = new URLSearchParams();
+                if (currentFilter !== 'All') params.append('market', currentFilter);
+                if (currentSector) params.append('sector', currentSector);
+                params.append('sort_by', currentSort.key);
+                params.append('fields', 'market,symbol,company,sector,industry,currency,shares,avgCost,currentPrice');
+                
+                const response = await fetch(`http://localhost:5001/api/stocks?${params.toString()}`);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                const data = await response.json();
-                if (data.error) {
-                    throw new Error(data.error);
+                const result = await response.json();
+                
+                if (result.errors && result.errors.length > 0) {
+                    throw new Error(result.errors[0].message);
                 }
-                return data.map(stock => ({
+                
+                // Extract data from MCP response
+                const data = result.data.map(stock => ({
                     ...stock,
                     totalCost: stock.shares * stock.avgCost,
                     marketValue: stock.shares * stock.currentPrice,
@@ -172,6 +161,15 @@
                     marketValueUSD: stock.currency === 'HKD' ? (stock.shares * stock.currentPrice) / usdToHkdRate : stock.shares * stock.currentPrice,
                     totalCostUSD: stock.currency === 'HKD' ? (stock.shares * stock.avgCost) / usdToHkdRate : stock.shares * stock.avgCost
                 }));
+                
+                // Update sector filter options
+                const sectors = [...new Set(data.map(stock => stock.sector))].filter(s => s && s !== 'N/A').sort();
+                const sectorSelect = document.getElementById('sector-filter');
+                sectorSelect.innerHTML = '<option value="">All Sectors</option>' + 
+                    sectors.map(sector => `<option value="${sector}">${sector}</option>`).join('');
+                sectorSelect.value = currentSector;
+                
+                return data;
             } catch (error) {
                 console.error('Error fetching stock data:', error);
                 alert('Failed to load portfolio data: ' + error.message);
@@ -195,27 +193,16 @@
             document.getElementById('total-cost').textContent = formatCurrency(totalCost);
             const plElement = document.getElementById('total-pl');
             plElement.textContent = formatCurrency(totalPl);
-            plElement.style.color = totalPl >= 0 ? '#10b981' : '#ef4444'; // green-500 or red-500
+            plElement.style.color = totalPl >= 0 ? '#10b981' : '#ef4444';
         }
 
         function renderTable(data) {
             const tbody = document.getElementById('portfolio-body');
             tbody.innerHTML = '';
 
-            data.sort((a, b) => {
-                let valA = a[currentSort.key];
-                let valB = b[currentSort.key];
-                if (typeof valA === 'string') {
-                    valA = valA.toLowerCase();
-                    valB = valB.toLowerCase();
-                }
-                return currentSort.order === 'asc' ? (valA > valB ? 1 : -1) : (valA < valB ? 1 : -1);
-            });
-
             data.forEach(stock => {
                 const row = document.createElement('tr');
                 row.className = 'border-b border-slate-100 hover:bg-slate-50';
-
                 const plColor = stock.pl >= 0 ? 'text-green-600' : 'text-red-600';
 
                 row.innerHTML = `
@@ -255,23 +242,13 @@
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: {
-                                    boxWidth: 12,
-                                    padding: 20,
-                                }
-                            },
+                            legend: { position: 'bottom', labels: { boxWidth: 12, padding: 20 } },
                             tooltip: {
                                 callbacks: {
-                                    label: function (context) {
+                                    label: function(context) {
                                         let label = context.label || '';
-                                        if (label) {
-                                            label += ': ';
-                                        }
-                                        if (context.parsed !== null) {
-                                            label += formatCurrency(context.parsed);
-                                        }
+                                        if (label) label += ': ';
+                                        if (context.parsed !== null) label += formatCurrency(context.parsed);
                                         return label;
                                     }
                                 }
@@ -286,9 +263,7 @@
         function updatePerformanceChart(data) {
             const ctx = document.getElementById('performanceChart').getContext('2d');
             const marketData = data.reduce((acc, stock) => {
-                if (!acc[stock.market]) {
-                    acc[stock.market] = { totalCostUSD: 0, marketValueUSD: 0 };
-                }
+                if (!acc[stock.market]) acc[stock.market] = { totalCostUSD: 0, marketValueUSD: 0 };
                 acc[stock.market].totalCostUSD += stock.totalCostUSD;
                 acc[stock.market].marketValueUSD += stock.marketValueUSD;
                 return acc;
@@ -301,18 +276,8 @@
             const chartData = {
                 labels: labels,
                 datasets: [
-                    {
-                        label: 'Total Cost',
-                        data: costData,
-                        backgroundColor: '#64748b', // slate-500
-                        borderRadius: 6,
-                    },
-                    {
-                        label: 'Market Value',
-                        data: valueData,
-                        backgroundColor: '#14b8a6', // teal-500
-                        borderRadius: 6,
-                    }
+                    { label: 'Total Cost', data: costData, backgroundColor: '#64748b', borderRadius: 6 },
+                    { label: 'Market Value', data: valueData, backgroundColor: '#14b8a6', borderRadius: 6 }
                 ]
             };
 
@@ -327,34 +292,17 @@
                         responsive: true,
                         maintainAspectRatio: false,
                         scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    callback: function (value) {
-                                        return formatCurrency(value);
-                                    }
-                                }
-                            },
-                            x: {
-                                grid: {
-                                    display: false
-                                }
-                            }
+                            y: { beginAtZero: true, ticks: { callback: value => formatCurrency(value) } },
+                            x: { grid: { display: false } }
                         },
                         plugins: {
-                            legend: {
-                                position: 'bottom',
-                            },
+                            legend: { position: 'bottom' },
                             tooltip: {
                                 callbacks: {
-                                    label: function (context) {
+                                    label: function(context) {
                                         let label = context.dataset.label || '';
-                                        if (label) {
-                                            label += ': ';
-                                        }
-                                        if (context.parsed.y !== null) {
-                                            label += formatCurrency(context.parsed.y);
-                                        }
+                                        if (label) label += ': ';
+                                        if (context.parsed.y !== null) label += formatCurrency(context.parsed.y);
                                         return label;
                                     }
                                 }
@@ -367,19 +315,14 @@
 
         function updateSectorChart(data) {
             const ctx = document.getElementById('sectorChart').getContext('2d');
-            // Aggregate by sector
             const sectorMap = {};
             data.forEach(stock => {
-                if (!sectorMap[stock.sector]) {
-                    sectorMap[stock.sector] = 0;
-                }
+                if (!sectorMap[stock.sector]) sectorMap[stock.sector] = 0;
                 sectorMap[stock.sector] += stock.marketValueUSD;
             });
             const labels = Object.keys(sectorMap);
             const values = labels.map(sector => sectorMap[sector]);
-            const colors = [
-                '#14b8a6', '#0891b2', '#f97316', '#84cc16', '#6366f1', '#f43f5e', '#eab308', '#a21caf', '#0ea5e9', '#f59e42'
-            ];
+            const colors = ['#14b8a6', '#0891b2', '#f97316', '#84cc16', '#6366f1', '#f43f5e', '#eab308', '#a21caf', '#0ea5e9', '#f59e0b'];
 
             const chartData = {
                 labels: labels,
@@ -402,23 +345,13 @@
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: {
-                                    boxWidth: 12,
-                                    padding: 20,
-                                }
-                            },
+                            legend: { position: 'bottom', labels: { boxWidth: 12, padding: 20 } },
                             tooltip: {
                                 callbacks: {
-                                    label: function (context) {
+                                    label: function(context) {
                                         let label = context.label || '';
-                                        if (label) {
-                                            label += ': ';
-                                        }
-                                        if (context.parsed !== null) {
-                                            label += formatCurrency(context.parsed);
-                                        }
+                                        if (label) label += ': ';
+                                        if (context.parsed !== null) label += formatCurrency(context.parsed);
                                         return label;
                                     }
                                 }
@@ -432,12 +365,11 @@
 
         async function updateDashboard() {
             const data = await fetchStockData();
-            const filteredData = currentFilter === 'All' ? data : data.filter(stock => stock.market === currentFilter);
-            updateKpiCards(filteredData);
-            renderTable(filteredData);
-            updateCompositionChart(filteredData);
-            updatePerformanceChart(filteredData);
-            updateSectorChart(filteredData);
+            updateKpiCards(data);
+            renderTable(data);
+            updateCompositionChart(data);
+            updatePerformanceChart(data);
+            updateSectorChart(data);
         }
 
         document.querySelectorAll('.filter-btn').forEach(button => {
@@ -453,6 +385,11 @@
             });
         });
 
+        document.getElementById('sector-filter').addEventListener('change', (e) => {
+            currentSector = e.target.value;
+            updateDashboard();
+        });
+
         document.querySelectorAll('.sortable-header').forEach(header => {
             header.addEventListener('click', () => {
                 const sortKey = header.dataset.sort;
@@ -462,14 +399,17 @@
                     currentSort.key = sortKey;
                     currentSort.order = 'desc';
                 }
+                document.querySelectorAll('.sortable-header').forEach(h => {
+                    h.classList.remove('sort-asc', 'sort-desc');
+                });
+                header.classList.add(currentSort.order === 'asc' ? 'sort-asc' : 'sort-desc');
                 updateDashboard();
             });
         });
 
-        window.onload = function () {
+        window.onload = function() {
             updateDashboard();
         };
     </script>
 </body>
-
 </html>
