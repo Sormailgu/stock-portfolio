@@ -24,12 +24,14 @@ def get_stocks():
         
         # Initialize lists to store company names and current prices
         companies = []
+        sectors = []
+        industries = []
         current_prices = []
         
         for symbol in df['symbol']:
             # Check cache first
             if symbol in cache:
-                company, price = cache[symbol]
+                company, price, sector, industry = cache[symbol]
             else:
                 try:
                     # Fetch stock data using yfinance
@@ -41,6 +43,10 @@ def get_stocks():
                     if not company:
                         return jsonify({'error': f'No company data found for {symbol}'}), 404
                     
+                    # Extract sector and industry
+                    sector = info.get('sector', 'N/A')
+                    industry = info.get('industry', 'N/A')
+                                        
                     # Get current price from the latest available data
                     price_data = stock.history(period='1d')
                     if price_data.empty or 'Close' not in price_data.columns:
@@ -48,20 +54,24 @@ def get_stocks():
                     price = round(float(price_data['Close'].iloc[-1]), 2)
                     
                     # Cache the results
-                    cache[symbol] = (company, price)
+                    cache[symbol] = (company, price, sector, industry)
                 
                 except Exception as e:
                     return jsonify({'error': f'Failed to fetch data for {symbol}: {str(e)}'}), 500
             
             companies.append(company)
+            sectors.append(sector)
+            industries.append(industry)
             current_prices.append(price)
         
         # Add company and currentPrice to DataFrame
         df['company'] = companies
+        df['sector'] = sectors
+        df['industry'] = industries
         df['currentPrice'] = current_prices
         
         # Reorder columns to match desired output
-        df = df[['market', 'symbol', 'company', 'currency', 'shares', 'avgCost', 'currentPrice']]
+        df = df[['market', 'symbol', 'company', 'sector', 'industry', 'currency', 'shares', 'avgCost', 'currentPrice']]
         
         # Convert to JSON
         data = df.to_dict(orient='records')

@@ -111,6 +111,14 @@
                     <canvas id="performanceChart"></canvas>
                 </div>
             </div>
+            <div class="lg:col-span-5 bg-white p-6 rounded-xl shadow-lg border border-slate-200 mt-6">
+                <h3 class="text-xl font-bold text-slate-900 mb-1">Portfolio by Sector</h3>
+                <p class="text-slate-500 mb-4">This chart shows your portfolio's market value distribution by sector.
+                </p>
+                <div class="chart-container" style="height:320px;">
+                    <canvas id="sectorChart"></canvas>
+                </div>
+            </div>
         </section>
 
         <section id="holdings-table" class="bg-white p-6 rounded-xl shadow-lg border border-slate-200">
@@ -124,6 +132,7 @@
                         <tr class="border-b-2 border-slate-200">
                             <th class="p-3 sortable-header" data-sort="symbol">Symbol</th>
                             <th class="p-3">Company</th>
+                            <th class="p-3">Sector</th>
                             <th class="p-3 text-right sortable-header" data-sort="shares">Shares</th>
                             <th class="p-3 text-right sortable-header" data-sort="avgCost">Avg. Cost</th>
                             <th class="p-3 text-right sortable-header" data-sort="marketValue">Market Value</th>
@@ -141,7 +150,7 @@
     <script>
         let currentFilter = 'All';
         let currentSort = { key: 'marketValue', order: 'desc' };
-        let compositionChart, performanceChart;
+        let compositionChart, performanceChart, sectorChart;
         const usdToHkdRate = 7.8;
 
         async function fetchStockData() {
@@ -212,6 +221,7 @@
                 row.innerHTML = `
                     <td class="p-3 font-medium">${stock.symbol} <span class="text-xs text-slate-400">${stock.market}</span></td>
                     <td class="p-3 text-slate-600">${stock.company}</td>
+                    <td class="p-3 text-slate-600">${stock.sector || '-'}</td>
                     <td class="p-3 text-right">${stock.shares.toLocaleString()}</td>
                     <td class="p-3 text-right">${formatCurrency(stock.avgCost, stock.currency)}</td>
                     <td class="p-3 text-right font-semibold">${formatCurrency(stock.marketValue, stock.currency)}</td>
@@ -355,6 +365,71 @@
             }
         }
 
+        function updateSectorChart(data) {
+            const ctx = document.getElementById('sectorChart').getContext('2d');
+            // Aggregate by sector
+            const sectorMap = {};
+            data.forEach(stock => {
+                if (!sectorMap[stock.sector]) {
+                    sectorMap[stock.sector] = 0;
+                }
+                sectorMap[stock.sector] += stock.marketValueUSD;
+            });
+            const labels = Object.keys(sectorMap);
+            const values = labels.map(sector => sectorMap[sector]);
+            const colors = [
+                '#14b8a6', '#0891b2', '#f97316', '#84cc16', '#6366f1', '#f43f5e', '#eab308', '#a21caf', '#0ea5e9', '#f59e42'
+            ];
+
+            const chartData = {
+                labels: labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: colors,
+                    borderColor: '#f8fafc',
+                    borderWidth: 4,
+                }]
+            };
+
+            if (sectorChart) {
+                sectorChart.data = chartData;
+                sectorChart.update();
+            } else {
+                sectorChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: chartData,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    boxWidth: 12,
+                                    padding: 20,
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function (context) {
+                                        let label = context.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed !== null) {
+                                            label += formatCurrency(context.parsed);
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        },
+                        cutout: '70%'
+                    }
+                });
+            }
+        }
+
         async function updateDashboard() {
             const data = await fetchStockData();
             const filteredData = currentFilter === 'All' ? data : data.filter(stock => stock.market === currentFilter);
@@ -362,6 +437,7 @@
             renderTable(filteredData);
             updateCompositionChart(filteredData);
             updatePerformanceChart(filteredData);
+            updateSectorChart(filteredData);
         }
 
         document.querySelectorAll('.filter-btn').forEach(button => {
