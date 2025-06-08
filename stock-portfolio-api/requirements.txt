@@ -1,5 +1,5 @@
-flask
-flask-cors
-pandas
-openpyxl
-yfinance
+fastapi>=0.115.0
+uvicorn>=0.30.6
+pandas>=2.2.2
+yfinance>=0.2.44
+python-multipart>=0.0.9
