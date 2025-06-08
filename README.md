@@ -1,6 +1,6 @@
 # Stock Portfolio Project
 
-A full-stack web application for managing and visualizing your personal stock portfolio, supporting US and HK markets. The project consists of a Python Flask API backend and a Node.js/Express frontend dashboard.
+A full-stack web application for managing and visualizing your personal stock portfolio, supporting US and HK markets. The project consists of a Python FastAPI backend and a Node.js/Express frontend dashboard.
 
 ---
 
@@ -17,9 +17,9 @@ A full-stack web application for managing and visualizing your personal stock po
 │   │   └── index.html          # Main dashboard UI
 │   └── src/
 │       └── server.js           # Express server for static files
-└── stock-portfolio-api/        # Backend (Python Flask API)
+└── stock-portfolio-api/        # Backend (Python FastAPI)
     ├── .gitignore
-    ├── app.py                  # Flask API server
+    ├── main.py                  # FastAPI server
     ├── README.md
     ├── requirements.txt
     └── stocks.csv              # Portfolio data (edit this file)
@@ -31,7 +31,7 @@ A full-stack web application for managing and visualizing your personal stock po
 
 ### 1. Backend: Stock Portfolio API
 
-The backend is a Flask API that reads your holdings from `stocks.csv` and fetches live company names and prices using Yahoo Finance.
+The backend is a FastAPI that reads your holdings from `stocks.csv` and fetches live company names and prices using Yahoo Finance.
 
 **Setup:**
 
@@ -61,7 +61,7 @@ npm start
 ```
 
 - The dashboard will be available at [http://localhost:3000](http://localhost:3000).
-- The dashboard fetches data from the Flask API (`/api/stocks`).
+- The dashboard fetches data from the FastAPI (`/api/stocks`).
 
 See [stock-portfolio/README.md](stock-portfolio/README.md) for more details.
 
@@ -100,7 +100,7 @@ MIT License
 
 ## Credits
 
-- [Flask](https://flask.palletsprojects.com/)
+- [fastapi](https://github.com/fastapi/fastapi/)
 - [yfinance](https://github.com/ranaroussi/yfinance)
 - [Express](https://expressjs.com/)
 - [Chart.js](https://www.chartjs.org/)
