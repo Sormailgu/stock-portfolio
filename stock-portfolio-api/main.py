@@ -5,7 +5,7 @@ import pandas as pd
 import os
 import yfinance as yf
 from functools import wraps
-from datetime import datetime
+from datetime import datetime, UTC
 import uuid
 from pydantic import BaseModel
 from typing import Optional, List
@@ -13,7 +13,8 @@ from fastapi.responses import JSONResponse
 import logging
 
 # Configure logging
-logging.basicConfig(level=logging.DEBUG)
+#logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 app = FastAPI()
@@ -51,10 +52,10 @@ def mcp_response(f):
                 "data": result if isinstance(result, list) else [],
                 "metadata": {
                     "request_id": str(uuid.uuid4()),
-                    "timestamp": datetime.utcnow().isoformat(),
+                    "timestamp": datetime.now(UTC).isoformat(),
                     "status": "success",
                     "endpoint": f.__name__,
-                    "query_params": kwargs.get('query', StockQuery()).dict() if hasattr(kwargs.get('query', StockQuery()), 'dict') else {}
+                    "query_params": kwargs.get('query', StockQuery()).model_dump() if hasattr(kwargs.get('query', StockQuery()), 'model_dump') else {}
                 },
                 "errors": []
             }
@@ -65,10 +66,10 @@ def mcp_response(f):
                 "data": [],
                 "metadata": {
                     "request_id": str(uuid.uuid4()),
-                    "timestamp": datetime.utcnow().isoformat(),
+                    "timestamp": datetime.now(UTC).isoformat(),
                     "status": "error",
                     "endpoint": f.__name__,
-                    "query_params": kwargs.get('query', StockQuery()).dict() if hasattr(kwargs.get('query', StockQuery()), 'dict') else {}
+                    "query_params": kwargs.get('query', StockQuery()).model_dump() if hasattr(kwargs.get('query', StockQuery()), 'model_dump') else {}
                 },
                 "errors": [{"message": str(e), "code": 500}]
             }
@@ -78,7 +79,7 @@ def mcp_response(f):
 @app.get("/api/stocks")
 @mcp_response
 async def get_stocks(query: StockQuery = Depends()):
-    file_path = 'stocks.csv'
+    file_path = 'data/stocks.csv'
     
     # Check if CSV file exists
     if not os.path.exists(file_path):
@@ -88,7 +89,7 @@ async def get_stocks(query: StockQuery = Depends()):
     df = pd.read_csv(file_path)
     
     # Log query parameters
-    logger.debug(f"Received query parameters: {query.dict()}")
+    logger.debug(f"Received query parameters: {query.model_dump()}")
     
     # Get query parameters for context
     fields = query.fields.split(',')
@@ -182,4 +183,4 @@ mcp.mount()
 
 if __name__ == '__main__':
     import uvicorn
-    uvicorn.run(app, host='0.0.0.0', port=5001)
+    uvicorn.run(app, host='localhost', port=5001)
