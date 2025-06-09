@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException, Depends
+from fastapi_mcp import FastApiMCP
 from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
 import os
@@ -171,6 +172,13 @@ async def get_stocks(query: StockQuery = Depends()):
     
     # Convert to JSON
     return df.to_dict(orient='records')
+
+
+mcp = FastApiMCP(app)
+
+# Mount the MCP server directly to your FastAPI app
+mcp.mount()
+
 
 if __name__ == '__main__':
     import uvicorn
