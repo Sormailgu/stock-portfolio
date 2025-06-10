@@ -66,7 +66,7 @@ All stock data is now fetched from an API endpoint:
     ```
   - You can call this endpoint from your frontend code or with tools like `curl`:
     ```bash
-    curl http://localhost:5001/api/stocks
+    curl http://localhost:8000/api/stocks
     ```
 
 ## Dependencies
