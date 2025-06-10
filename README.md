@@ -41,7 +41,7 @@ pip install -r requirements.txt
 python app.py
 ```
 
-- The API will be available at [http://localhost:5001/api/stocks](http://localhost:5001/api/stocks).
+- The API will be available at [http://localhost:8000/api/stocks](http://localhost:8000/api/stocks).
 - Edit `stocks.csv` to update your holdings.
 
 See [stock-portfolio-api/README.md](stock-portfolio-api/README.md) for more details.

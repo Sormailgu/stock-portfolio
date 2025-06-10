@@ -141,7 +141,7 @@
                 params.append('sort_by', currentSort.key);
                 params.append('fields', 'market,symbol,company,sector,industry,currency,shares,avgCost,currentPrice');
                 
-                const response = await fetch(`http://localhost:5001/api/stocks?${params.toString()}`);
+                const response = await fetch(`http://localhost:8000/api/stocks?${params.toString()}`);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
