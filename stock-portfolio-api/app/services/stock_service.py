@@ -1,17 +1,19 @@
+import csv
 import pandas as pd
-import os
 import yfinance as yf
 from fastapi import HTTPException
 from app.models.stock_query import StockQuery
+from app.models.stock import Stock
 from app.utils.cache import cache
+from app.core.config import settings
 import logging
 
 logger = logging.getLogger(__name__)
 
 async def get_stocks_service(query: StockQuery):
-    file_path = 'data/stocks.csv'
-    if not os.path.exists(file_path):
-        raise HTTPException(status_code=404, detail='stocks.csv not found')
+    file_path = settings.CSV_FILE_PATH
+    if not file_path:
+        raise HTTPException(status_code=500, detail='CSV file path is not configured')
     df = pd.read_csv(file_path)
     logger.debug(f"Received query parameters: {query.model_dump()}")
     fields = query.fields.split(',')
@@ -63,3 +65,37 @@ async def get_stocks_service(query: StockQuery):
     df = df[valid_fields]
     logger.debug(f"Final DataFrame: {df.to_dict(orient='records')}")
     return df.to_dict(orient='records')
+
+async def upload_stocks_service(stocks):
+    file_path = 'data/stocks.csv'
+    if not stocks:
+        raise HTTPException(status_code=400, detail='No stock records provided')
+    try:
+        # Load existing data if file exists
+        try:
+            df = pd.read_csv(file_path)
+        except FileNotFoundError:
+            df = pd.DataFrame(columns=list(Stock.__fields__.keys()))
+
+        # Convert incoming stocks to DataFrame
+        stock_dicts = [s.dict() if isinstance(s, Stock) else dict(s) for s in stocks]
+        new_df = pd.DataFrame(stock_dicts)
+
+        # Update or append records
+        for _, new_row in new_df.iterrows():
+            mask = (df['market'] == new_row['market']) & (df['symbol'] == new_row['symbol'])
+            if df[mask].empty:
+                df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+            else:
+                df.loc[mask, :] = new_row.values
+
+        # Write back to CSV
+        fieldnames = list(Stock.__fields__.keys())
+        df = df[fieldnames]  # Ensure correct column order
+        df.to_csv(file_path, index=False)
+
+        logger.info(f"CSV file '{file_path}' updated successfully with {len(df)} records.")
+        return {"message": "CSV file updated successfully."}
+    except Exception as e:
+        logger.error(f"Failed to update CSV: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to update CSV: {str(e)}")
