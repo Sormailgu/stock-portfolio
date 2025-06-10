@@ -1,5 +1,5 @@
 from fastapi.responses import JSONResponse
-from datetime import datetime, UTC
+from datetime import datetime
 import uuid
 from functools import wraps
 from app.models.stock_query import StockQuery
