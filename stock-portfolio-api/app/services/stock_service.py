@@ -94,7 +94,11 @@ async def update_stocks_service(stocks: List[Stock]) -> Dict[str, str]:
         stock_dicts = [s.dict() if isinstance(s, Stock) else dict(s) for s in stocks]
         new_df = pd.DataFrame(stock_dicts)
 
-        # Merge on 'market' and 'symbol'
+        # Merge the existing and new stock records based on 'market' and 'symbol' as composite keys.
+        # 1. Set both DataFrames' indexes to ['market', 'symbol'] to align records for update.
+        # 2. Use df.update(new_df) to update existing records in df with values from new_df where keys match.
+        # 3. Concatenate df with any new records from new_df that do not exist in df (i.e., new stocks).
+        # 4. Reset the index to default integer index for easier downstream processing.
         df.set_index(['market', 'symbol'], inplace=True, drop=False)
         new_df.set_index(['market', 'symbol'], inplace=True, drop=False)
         df.update(new_df)
