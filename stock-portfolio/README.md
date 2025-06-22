@@ -7,10 +7,9 @@ The Stock Portfolio Dashboard is an interactive web application that allows user
 ```
 stock-portfolio
 ├── public
-│   ├── index.html         # HTML structure for the dashboard
-│   └── stocks.xlsx       # Excel file containing stock data
+│   └── index.html         # HTML structure for the dashboard
 ├── src
-│   └── server.js         # Server-side script to read Excel data and serve it
+│   └── server.js          # Server-side script to serve API and static files
 ├── package.json           # npm configuration file with dependencies
 └── README.md              # Documentation for the project
 ```
@@ -45,19 +44,34 @@ stock-portfolio
 - Visualizations include a Doughnut chart for portfolio composition and a Bar chart for market performance.
 - The detailed holdings table allows sorting by various columns.
 
-## Excel File Structure
-The `stocks.xlsx` file contains the following columns:
-- **Market**: The market where the stock is listed (e.g., US, HK).
-- **Symbol**: The stock symbol.
-- **Company**: The name of the company.
-- **Currency**: The currency in which the stock is traded (e.g., USD, HKD).
-- **Shares**: The number of shares owned.
-- **AvgCost**: The average cost per share.
-- **CurrentPrice**: The current market price per share.
+## API Usage
+
+All stock data is now fetched from an API endpoint:
+
+- **GET /api/stocks**
+  - Returns: JSON array of stock holdings.
+  - Example response:
+    ```json
+    [
+      {
+        "Market": "US",
+        "Symbol": "AAPL",
+        "Company": "Apple Inc.",
+        "Currency": "USD",
+        "Shares": 10,
+        "AvgCost": 150,
+        "CurrentPrice": 175
+      }
+    ]
+    ```
+  - You can call this endpoint from your frontend code or with tools like `curl`:
+    ```bash
+    curl http://localhost:8000/api/stocks
+    ```
 
 ## Dependencies
 - **Express**: Web framework for Node.js.
-- **xlsx**: Library to read and write Excel files.
+- **Any other dependencies used by your API**
 
 ## License
 This project is licensed under the MIT License. See the LICENSE file for details.
